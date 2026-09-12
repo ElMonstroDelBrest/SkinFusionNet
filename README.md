@@ -81,17 +81,3 @@ flutter build apk --debug
 See the [application guide](app/README.md) for runtime details. The checked-in
 package configuration requires Dart 3.12.1 or later within the declared major
 version range, together with a compatible Flutter SDK and Android toolchain.
-
-## Data boundary and evaluation limits
-
-Clinical images, datasets, patient records, per-image results, databases,
-spreadsheets and research reports are excluded from the source repository.
-The five Flutter launcher icons are the only allowlisted image files.
-Application exports, backups and demo databases can contain clinical material
-and must stay outside Git.
-
-Existing evaluation metadata describes exploratory experiments. Image-level
-cross-validation, incomplete training provenance, unresolved patient grouping
-and thresholds inherited from earlier experiments limit the conclusions that
-can be drawn. The source and model bundle alone do not establish clinical
-validity or training-data privacy.
