@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "derm"
 version = "0.1.0"
+authors = [{name = "George-Daniel Gherasim"}]
 description = "SkinFusionNet: A multimodal Mobile Framework for Skin Lesion Classification Using ABCD Features and Deep Learning"
 requires-python = ">=3.10"
 

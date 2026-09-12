@@ -1,5 +1,9 @@
 # SkinFusionNet Android application
 
+Developed by **George-Daniel Gherasim** under the supervision of
+[**Simona Moldovanu**](https://www.cti.ugal.ro/wp-content/uploads/2024/05/Moldovanu_Simona.pdf),
+**“Dunărea de Jos” University of Galați, Romania**.
+
 This Flutter application runs the SkinFusionNet lesion classifier locally using
 ONNX Runtime. It supports image import, preprocessing, classification, patient
 records and a local audit trail.

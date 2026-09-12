@@ -1,5 +1,9 @@
 # SkinFusionNet: A multimodal Mobile Framework for Skin Lesion Classification Using ABCD Features and Deep Learning
 
+Developed by **George-Daniel Gherasim** under the supervision of
+[**Simona Moldovanu**](https://www.cti.ugal.ro/wp-content/uploads/2024/05/Moldovanu_Simona.pdf),
+**“Dunărea de Jos” University of Galați, Romania**.
+
 SkinFusionNet is a research prototype for skin lesion classification. It combines a
 Python training and evaluation pipeline with a Flutter Android application that
 runs the deployed ONNX models on the device.
