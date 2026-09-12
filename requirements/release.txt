@@ -1,0 +1,7 @@
+# Combined analysis and export dependencies, plus the PyTorch backbone.
+-r analysis.txt
+-r export.txt
+
+torch>=2.7                       # See train.txt for GPU environment requirements.
+torchvision>=0.22
+onnxmltools>=1.14

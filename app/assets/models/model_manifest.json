@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "bundle_id": "skinfusionnet-v2s3c-singlepass-1.0.0",
+  "release_date": "2026-06-30",
+  "status": "deployed",
+  "variant": "single_pass",
+  "bundle_sha256": "24d6d97423c08b2864be590b07cadff027d1210ae28d3e76d7d7c85292833fc3",
+  "bundle_hash_algorithm": "sha256-v1 over manifest-ordered component name, NUL byte, and raw SHA-256 digest",
+  "classes": [
+    "nevus",
+    "melanoma",
+    "atypical"
+  ],
+  "ensemble": "mean(P_A,P_C)",
+  "preprocessing": {
+    "version": "cv512-unet384-hc18-v1",
+    "work_size": 512,
+    "unet_size": 384,
+    "cnn_size": 224,
+    "cnn_normalization": "ImageNet mean/std",
+    "views": [
+      "unet-lesion-only",
+      "dullrazor-dehair"
+    ],
+    "handcraft_features": 18,
+    "tta_passes": 1
+  },
+  "decision_policy": {
+    "version": "three-sigmoid-youden-legacy-v1",
+    "score_semantics": "normalized multiclass probabilities summing to one; the legacy version identifier is historical and does not imply independent sigmoid outputs",
+    "status": "legacy-thresholds-require-singlepass-recalibration",
+    "editable_in_app": true,
+    "thresholds": {
+      "nevus": 0.508,
+      "melanoma": 0.188,
+      "atypical": 0.412
+    },
+    "severity_order": [
+      "melanoma",
+      "atypical",
+      "nevus"
+    ]
+  },
+  "components": [
+    {
+      "name": "unet.onnx",
+      "role": "segmentation",
+      "architecture": "U-Net/EfficientNet-B0",
+      "sha256": "32fc69b40b2a4d596cbeae7ff9e5ac3df963e21c0f24d4236c972dc6878313e7",
+      "input": "float32[batch,3,384,384]",
+      "output": "float32[batch,1,384,384] logits",
+      "onnx_opset": 17,
+      "exporter": "PyTorch 2.6.0"
+    },
+    {
+      "name": "cnn_lesion_feats.onnx",
+      "role": "lesion-feature-extractor",
+      "architecture": "EfficientNetV2-S+CBAM",
+      "sha256": "8e98cc8a0bc34de676dcff0e04071043d456e54cfdf5e395800966a227fb3372",
+      "input": "float32[batch,3,224,224]",
+      "output": "float32[batch,1280]",
+      "onnx_opset": 17,
+      "exporter": "PyTorch 2.11.0"
+    },
+    {
+      "name": "cnn_dehair_feats.onnx",
+      "role": "dehair-feature-extractor",
+      "architecture": "EfficientNetV2-S+CBAM",
+      "sha256": "f89f9ae5b0466f1e6dea151885fed061327277064971311bd3a11968fcbb688f",
+      "input": "float32[batch,3,224,224]",
+      "output": "float32[batch,1280]",
+      "onnx_opset": 17,
+      "exporter": "PyTorch 2.11.0"
+    },
+    {
+      "name": "lgbm_a.onnx",
+      "role": "lesion-fusion-head",
+      "architecture": "StandardScaler+LightGBM",
+      "sha256": "f71d3e8b0dc5513aa4f005b3b7c3400d4a313b20f40233cc6cd88e68bdb51269",
+      "input": "float32[batch,1298]",
+      "output": "float32[batch,3] probabilities",
+      "onnx_opset": 16,
+      "onnx_ml_opset": 3,
+      "exporter": "skl2onnx 1.20.0"
+    },
+    {
+      "name": "lgbm_c.onnx",
+      "role": "dehair-fusion-head",
+      "architecture": "StandardScaler+LightGBM",
+      "sha256": "6008a191855f7e9bfefa8cdc776d755549d0dd06830da2af68eb32927515e05a",
+      "input": "float32[batch,1298]",
+      "output": "float32[batch,3] probabilities",
+      "onnx_opset": 16,
+      "onnx_ml_opset": 3,
+      "exporter": "skl2onnx 1.20.0"
+    }
+  ],
+  "training_provenance": {
+    "dataset_id": "merged-25903-four-sources-unversioned",
+    "dataset_fingerprint": null,
+    "training_commit": null,
+    "cnn_checkpoint_hashes": null,
+    "reproducibility_status": "partial: deployed ONNX files are available, exact V2S checkpoints and training commit were not recorded"
+  },
+  "runtime_reference": {
+    "app_version": "0.2.0+2",
+    "flutter": "3.44.1",
+    "dart": "3.12.1",
+    "flutter_onnxruntime_plugin": "1.4.1",
+    "native_onnxruntime": "1.15.1",
+    "flutter_opencv": "4.12.0",
+    "python_parity_onnxruntime": "1.26.0",
+    "python_parity_opencv": "4.13.0"
+  },
+  "evaluations": [
+    {
+      "id": "internal-image-cv-singlepass-2026-06-30",
+      "status": "optimistic-representation-leak",
+      "n": 25903,
+      "accuracy": 0.9424,
+      "auc_macro_ovr": 0.9886,
+      "macro_dice": 0.9312,
+      "source": "results/internal/lgbm_v2s_singlepass1280_gpu_log.txt"
+    },
+    {
+      "id": "external-hospital-singlepass-2026-06-30",
+      "status": "exploratory-small-n",
+      "n": 107,
+      "n_melanoma": 19,
+      "auc_melanoma_vs_nevus": 0.9318,
+      "melanoma_detected_at_legacy_threshold": "12/19",
+      "not_benign_detected": "17/19",
+      "source": "results/external/external_deployed_parity_summary.txt"
+    }
+  ]
+}

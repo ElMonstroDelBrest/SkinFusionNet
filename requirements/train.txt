@@ -1,0 +1,9 @@
+# U-Net and CNN training dependencies.
+# Install PyTorch from the appropriate CPU or CUDA package index for the target hardware.
+# The version floor supports the current Blackwell training environment.
+torch>=2.7                       # Install the build appropriate to the target hardware.
+torchvision>=0.22
+segmentation-models-pytorch>=0.3
+opencv-python>=4.9
+numpy>=1.26
+tqdm>=4.66

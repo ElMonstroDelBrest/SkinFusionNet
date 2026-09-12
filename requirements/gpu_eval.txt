@@ -1,0 +1,11 @@
+# Experimental GPU bundle inference with eval_shifted and bundle_runtime.
+# Install alongside a hardware-compatible CUDA-enabled PyTorch environment.
+onnxruntime-gpu==1.26.0
+opencv-python-headless==4.13.0.92
+pandas==3.0.3
+scikit-learn==1.9.0
+pillow==12.2.0
+pillow-heif==1.3.0
+onnx==1.21.0
+onnx2torch>=1.5
+segmentation-models-pytorch>=0.3

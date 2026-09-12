@@ -1,0 +1,11 @@
+# ONNX export and external inference utilities in derm/export.
+# CNN and U-Net re-export also require the training dependencies.
+numpy==2.4.6
+pandas==3.0.3                    # check_external_parity, export_all_v2s, train_export_lgbm_v2s
+scipy==1.17.1
+onnx==1.21.0
+onnxruntime==1.26.0
+opencv-python-headless==4.13.0.92
+pillow==12.2.0
+pillow-heif==1.3.0
+skl2onnx            # Unpinned; needed to re-export LightGBM to ONNX.

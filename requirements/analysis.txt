@@ -1,0 +1,11 @@
+# CPU analysis and LightGBM fitting for derm/fusion and derm/analysis.
+# Requires local feature CSV files in artifacts/.
+numpy==2.4.6
+pandas==3.0.3
+scikit-learn==1.9.0
+scipy==1.17.1
+lightgbm==4.6.0
+matplotlib==3.10.9
+joblib==1.5.3
+opencv-python-headless==4.13.0.92   # Some analyses also read local images.
+openpyxl==3.1.5                     # Research workbook generation.
