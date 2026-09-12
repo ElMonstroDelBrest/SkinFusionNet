@@ -15,6 +15,7 @@ five deployed ONNX models. Research inputs and outputs are local-only.
   build configuration.
 - `app/assets/models/`: the five deployed ONNX files and their runtime manifest.
   These are the application bundle; `models/` holds local training artifacts.
+- `derm/tests/` and `app/test/`: synthetic contract and application tests.
 - `requirements/` and `pyproject.toml`: Python package and dependency definitions.
 
 Run Python entry points from the project root with `python -m derm.<module>`.

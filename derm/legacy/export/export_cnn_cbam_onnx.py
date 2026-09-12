@@ -9,7 +9,7 @@ cleanly. Produces:
 Input  : 1x3x224x224 float32 (RGB, ImageNet-normalised on the app side)
 Output : 1x512       penultimate features (cnn_0 .. cnn_511)
 
-Run from C:\\Projet\\Stage :  C:\\v\\Scripts\\python.exe export\\export_cnn_cbam_onnx.py
+Run from the repository root: python3 -m derm.legacy.export.export_cnn_cbam_onnx
 """
 import sys
 from pathlib import Path

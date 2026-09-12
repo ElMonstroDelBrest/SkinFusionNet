@@ -1,9 +1,9 @@
 """
-Train + save the two LightGBM models of the serious ensemble, then export to ONNX.
+Train + save the two LightGBM models of the historical 512-D ensemble, then export to ONNX.
 
 A = handcraft(18) + CNN(lesion)   -> scaler_A + LGBM_A
 C = handcraft(18) + CNN(dehair)   -> scaler_C + LGBM_C
-Ensemble (deployed in the app)    = (P_A + P_C) / 2
+Historical ensemble    = (P_A + P_C) / 2
 
 train_lgbm_entropy.py only did CV (saved nothing); here we fit on ALL data for
 deployment and also print an 80/20 holdout accuracy as a sanity estimate.
@@ -11,7 +11,7 @@ deployment and also print an 80/20 holdout accuracy as a sanity estimate.
 Each ONNX model takes the RAW 530-vector [18 handcraft | 512 CNN] and applies the
 z-score internally (StandardScaler baked into the pipeline) -> [P0,P1,P2].
 
-Run with the isolated venv:  C:\\pcv\\Scripts\\python.exe export\\train_export_lgbm.py
+Run from the repository root: python3 -m derm.legacy.export.train_export_lgbm
 """
 import json
 from pathlib import Path

@@ -5,9 +5,9 @@ on-device ABCDE readout. For each feature we emit:
   sign       -> +1 if a HIGHER value is more concerning (melanoma side),
                 -1 otherwise (so an oriented z-score >0 always means "atypical")
 
-Writes Mobile_App/lib/ml/feature_baseline.dart
+Writes app/lib/ml/feature_baseline.dart
 
-Run:  C:\\v\\Scripts\\python.exe export\\make_baseline.py
+Run from the repository root: python3 -m derm.legacy.export.make_baseline
 """
 from pathlib import Path
 

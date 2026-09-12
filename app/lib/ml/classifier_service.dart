@@ -182,15 +182,23 @@ class ClassifierService {
     int outIdx,
   ) {
     final tensor = OrtValueTensor.createTensorWithDataList(data, shape);
-    final run = OrtRunOptions();
-    final outs = s.run(run, {'input': tensor});
-    final flat = _flatten(outs[outIdx]?.value);
-    tensor.release();
-    run.release();
-    for (final o in outs) {
-      o?.release();
+    try {
+      final run = OrtRunOptions();
+      try {
+        final outs = s.run(run, {'input': tensor});
+        try {
+          return _flatten(outs[outIdx]?.value);
+        } finally {
+          for (final output in outs) {
+            output?.release();
+          }
+        }
+      } finally {
+        run.release();
+      }
+    } finally {
+      tensor.release();
     }
-    return flat;
   }
 
   List<double> _flatten(dynamic v) {

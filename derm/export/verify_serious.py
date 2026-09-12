@@ -1,6 +1,6 @@
 """
-End-to-end validation of the SERIOUS ensemble, fully from raw .jpg, using only
-ONNX runtimes (mirrors exactly what the Flutter app will do):
+End-to-end evaluation of the deployed ensemble from raw JPEG images using
+ONNX Runtime with preprocessing matching the Flutter pipeline:
 
   jpg ─┬─ U-Net(onnx) ─► mask ─► lesion-only ─┐
        │                                       ├─ 18 handcraft features ┐

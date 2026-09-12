@@ -1,5 +1,5 @@
 """
-ALL-IN-ONE export of the deployed EfficientNetV2-S model.
+Export and synchronize the deployed EfficientNetV2-S model bundle.
 
 Produces in models/ and syncs the app runtime assets in app/assets/models/:
   cnn_lesion_feats.onnx   <- cnn_v2s_best.pth        (1280-d, fc=Identity)

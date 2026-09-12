@@ -5,3 +5,5 @@
 torch>=2.7                       # See train.txt for GPU environment requirements.
 torchvision>=0.22
 onnxmltools>=1.14
+segmentation-models-pytorch>=0.3
+tqdm>=4.66

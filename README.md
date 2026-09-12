@@ -8,7 +8,9 @@ SkinFusionNet is a research prototype for skin lesion classification. It combine
 Python training and evaluation pipeline with a Flutter Android application that
 runs the deployed ONNX models on the device.
 
-The classifier produces probabilities for three classes: nevus, melanoma and
+The classifier combines image-derived CNN embeddings and ABCD descriptors.
+Patient metadata supports record management and is not an input to the current
+classifier. It produces probabilities for three classes: nevus, melanoma and
 atypical. The application applies configurable thresholds to those probabilities
 and records each analysis in a local audit database. This is a research and
 demonstration system; its predictions are not a validated clinical diagnosis.
@@ -41,7 +43,8 @@ boundary between versioned source and local research artifacts.
 
 ## Python setup
 
-Use a separate virtual environment for the dependency set you need. For analysis:
+Use **Python 3.11 or later** and a separate virtual environment for the dependency
+set you need. For analysis:
 
 ```sh
 python3 -m venv .venv
@@ -70,6 +73,12 @@ when intentionally rebuilding the runtime bundle.
 
 ## Android application
 
+Install [Flutter 3.44.1](https://docs.flutter.dev/install/archive) (Dart 3.12.1),
+JDK 17 and the Android SDK with API 36. Flutter and the Android SDK are installed
+on the build machine; they are not distributed in this repository. The Android
+Gradle wrapper supplies Gradle automatically. Accept the Android SDK licenses
+with `flutter doctor --android-licenses`, then check `flutter doctor -v`.
+
 ```sh
 cd app
 flutter pub get
@@ -78,6 +87,20 @@ flutter test
 flutter build apk --debug
 ```
 
-See the [application guide](app/README.md) for runtime details. The checked-in
-package configuration requires Dart 3.12.1 or later within the declared major
-version range, together with a compatible Flutter SDK and Android toolchain.
+See the [application guide](app/README.md) for runtime details and testing scope.
+The APK is written to `app/build/app/outputs/flutter-apk/app-debug.apk` when
+building from the repository root as shown above. It can be installed on an
+Android device without installing Flutter on that device.
+
+## Source and model checks
+
+These checks use only the Python standard library and the bundled models:
+
+```sh
+python3 -m unittest discover -s derm/tests -v
+python3 -m derm.export.model_manifest
+```
+
+They validate the manifest contract and model hashes. Flutter tests separately
+cover application startup and manifest parsing using local test doubles; they
+do not replace on-device inference testing.

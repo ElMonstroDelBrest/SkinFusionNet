@@ -110,8 +110,8 @@ class AnalysisRow {
   });
 }
 
-/// Backend-agnostic audit / training store. SQLite today; the same contract
-/// will back a Google-Drive export adapter (demo) and a hospital server (final).
+/// Storage interface for patient records, analyses and local audit exports.
+/// The current implementation uses SQLite and application-local image files.
 abstract class AuditRepository {
   Future<void> init();
 

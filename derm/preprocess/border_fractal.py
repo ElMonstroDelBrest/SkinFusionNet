@@ -11,7 +11,7 @@ side eps ; the number of occupied boxes N(eps) scales as N ~ eps^(-D), so
 morpho rings : internal/external pixel counts at a configurable set of disk
 radii (kept for compatibility / as extra border-roughness features).
 
-Run the self-test:  .venv_extval/bin/python border_fractal.py
+Run from the repository root: python3 -m derm.preprocess.border_fractal
 """
 import cv2
 import numpy as np

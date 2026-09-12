@@ -51,7 +51,11 @@ prototype builds. Existing local records are not migrated automatically.
 
 ## Development
 
-Run from this directory with a compatible Flutter SDK and Android toolchain:
+Use Flutter 3.44.1 (Dart 3.12.1), JDK 17 and Android SDK API 36. Run
+`flutter doctor -v` and resolve Android toolchain errors before building. This
+checkout supports Android; an iOS project is not included.
+
+Run from this directory:
 
 ```sh
 flutter pub get
@@ -60,6 +64,18 @@ flutter test
 flutter build apk --debug
 flutter run
 ```
+
+The debug APK is `build/app/outputs/flutter-apk/app-debug.apk`. The current release
+configuration also uses a debug signing key for local development; configure a
+private release key before distributing a production build.
+
+Widget tests use in-memory service doubles to check startup, readiness and error
+handling without opening a patient database or loading native models. Manifest
+tests check class ordering, thresholds and component fingerprints. Native ONNX,
+OpenCV, image import and device-specific rendering require an Android test run.
+
+The bundled Inter font is distributed with its
+[SIL Open Font License](assets/fonts/Inter-LICENSE.txt).
 
 Validate model hashes from the repository root with:
 

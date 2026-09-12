@@ -26,6 +26,7 @@ from sklearn.calibration import calibration_curve
 from sklearn.metrics import (auc, confusion_matrix, f1_score, precision_score,
                               recall_score, roc_curve)
 from sklearn.model_selection import StratifiedKFold
+from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 from derm import paths
@@ -50,15 +51,19 @@ if not np.array_equal(y, cnn_a_raw["Class"].to_numpy(int)):
     raise ValueError("Class mismatch features.csv vs V2S lesion CSV")
 if not np.array_equal(y, cnn_c_raw["Class"].to_numpy(int)):
     raise ValueError("Class mismatch features.csv vs V2S dehair CSV")
-X_A = StandardScaler().fit_transform(np.c_[hc.iloc[:, :-1].values, cnn_a.values])
-X_C = StandardScaler().fit_transform(np.c_[hc.iloc[:, :-1].values, cnn_c.values])
+X_A = np.c_[hc.iloc[:, :-1].values, cnn_a.values]
+X_C = np.c_[hc.iloc[:, :-1].values, cnn_c.values]
 print(f"X_A: {X_A.shape}   X_C: {X_C.shape}")
 
 
 def make_model():
-    return LGBMClassifier(n_estimators=300, learning_rate=0.05,
-                         num_leaves=63, random_state=42,
-                         n_jobs=-1, verbose=-1)
+    # Fit the scaler on each training fold, not on held-out observations.
+    return make_pipeline(
+        StandardScaler(),
+        LGBMClassifier(n_estimators=300, learning_rate=0.05,
+                       num_leaves=63, random_state=42,
+                       n_jobs=-1, verbose=-1),
+    )
 
 
 # --- 10-fold CV to gather out-of-fold probabilities ---------------------------
@@ -83,10 +88,10 @@ for c, ax in zip((0, 1, 2), axes):
     y_bin = (y == c).astype(int)
     p = oof_probs[:, c]
     fop, mpv = calibration_curve(y_bin, p, n_bins=10, strategy="quantile")
-    ax.plot([0, 1], [0, 1], "k:", label="parfaitement calibré")
+    ax.plot([0, 1], [0, 1], "k:", label="Perfect calibration")
     ax.plot(mpv, fop, "o-", color=COLORS[c], lw=2, ms=8, label=LABELS[c])
-    ax.set_xlabel("Probabilité prédite (sigmoïde)")
-    ax.set_ylabel("Fréquence observée")
+    ax.set_xlabel("Predicted class probability")
+    ax.set_ylabel("Observed frequency")
     ax.set_title(f"Calibration — {LABELS[c]}")
     ax.legend()
     ax.grid(alpha=0.3)
@@ -114,9 +119,9 @@ for c in (0, 1, 2):
     ax.plot(fpr[j], tpr[j], "o", color=COLORS[c], ms=10, mew=2,
             mec="black", label=f"  Sens={tpr[j]:.2f}, Spec={1-fpr[j]:.2f}")
 ax.plot([0, 1], [0, 1], "k:")
-ax.set_xlabel("1 − Spécificité (FPR)")
-ax.set_ylabel("Sensibilité (TPR)")
-ax.set_title("Courbes ROC par classe (one-vs-rest) + seuil optimal Youden")
+ax.set_xlabel("1 - Specificity (FPR)")
+ax.set_ylabel("Sensitivity (TPR)")
+ax.set_title("One-vs-rest ROC curves and Youden thresholds")
 ax.legend(loc="lower right", fontsize=9)
 ax.grid(alpha=0.3)
 plt.tight_layout()
@@ -132,12 +137,12 @@ for c, ax in zip((0, 1, 2), axes):
     for true_c in (0, 1, 2):
         mask = (y == true_c)
         ax.hist(oof_probs[mask, c], bins=40, alpha=0.5,
-                color=COLORS[true_c], label=f"vraie classe = {LABELS[true_c]}")
+                color=COLORS[true_c], label=f"True class = {LABELS[true_c]}")
     ax.axvline(optimal_thresholds[c][0], color="black", ls="--",
                label=f"T* = {optimal_thresholds[c][0]:.2f}")
-    ax.set_xlabel(f"P({LABELS[c]}) prédite")
-    ax.set_ylabel("Effectif")
-    ax.set_title(f"Distribution de P({LABELS[c]}) par vraie classe")
+    ax.set_xlabel(f"P({LABELS[c]}) predicted")
+    ax.set_ylabel("Count")
+    ax.set_title(f"Distribution of P({LABELS[c]}) by true class")
     ax.legend(fontsize=8)
     ax.set_yscale("log")
 plt.tight_layout()
@@ -159,9 +164,9 @@ ax.set_xticks([0, 1, 2])
 ax.set_yticks([0, 1, 2])
 ax.set_xticklabels(["nevus", "melanoma", "atypical"])
 ax.set_yticklabels(["nevus", "melanoma", "atypical"])
-ax.set_xlabel("Prédit")
-ax.set_ylabel("Vrai")
-ax.set_title("Matrice de confusion normalisée (argmax)")
+ax.set_xlabel("Predicted")
+ax.set_ylabel("True")
+ax.set_title("Normalized confusion matrix (argmax)")
 plt.colorbar(im, ax=ax)
 plt.tight_layout()
 plt.savefig(OUT / "confusion_argmax.png", dpi=120)
@@ -187,17 +192,16 @@ for pt in pts:
     net_benefit_model.append(nb)
 
 net_benefit_all = y_mel.mean() - (1 - y_mel.mean()) * pts / (1 - pts)
-net_benefit_all = np.maximum(net_benefit_all, 0) - 1e3  # mostly negative
 
 fig, ax = plt.subplots(figsize=(8, 6))
 ax.plot(pts, net_benefit_model, color="#d62728", lw=2,
-        label="Modèle ensemble")
-ax.plot(pts, [y_mel.mean() - (1 - y_mel.mean()) * pt / (1 - pt) for pt in pts],
-        color="gray", lw=1, ls="--", label="Traiter tout le monde")
-ax.axhline(0, color="black", lw=1, label="Ne traiter personne")
-ax.set_xlabel("Seuil probabilité (préférence clinique pt)")
-ax.set_ylabel("Bénéfice net")
-ax.set_title("Decision Curve Analysis — mélanome")
+        label="Ensemble model")
+ax.plot(pts, net_benefit_all,
+        color="gray", lw=1, ls="--", label="Treat all")
+ax.axhline(0, color="black", lw=1, label="Treat none")
+ax.set_xlabel("Threshold probability (pt)")
+ax.set_ylabel("Net benefit")
+ax.set_title("Decision curve analysis - melanoma")
 ax.legend()
 ax.grid(alpha=0.3)
 ax.set_ylim(-0.05, max(net_benefit_model) * 1.2)
@@ -212,11 +216,11 @@ print("saved decision_curve_melanoma.png")
 H = -(oof_probs * np.log(oof_probs + 1e-12)).sum(axis=1)
 correct = (y_pred == y)
 fig, ax = plt.subplots(figsize=(9, 5))
-ax.hist(H[correct], bins=50, alpha=0.6, color="green", label="prédictions correctes")
-ax.hist(H[~correct], bins=50, alpha=0.6, color="red", label="prédictions fausses")
-ax.set_xlabel("Entropie de Shannon (3-class)")
-ax.set_ylabel("Effectif")
-ax.set_title("Confiance du modèle : entropie de la prédiction")
+ax.hist(H[correct], bins=50, alpha=0.6, color="green", label="Correct predictions")
+ax.hist(H[~correct], bins=50, alpha=0.6, color="red", label="Incorrect predictions")
+ax.set_xlabel("Shannon entropy (3 classes)")
+ax.set_ylabel("Count")
+ax.set_title("Prediction entropy")
 ax.legend()
 ax.grid(alpha=0.3)
 plt.tight_layout()
@@ -230,20 +234,24 @@ print("saved entropy_confidence.png")
 lines = []
 lines.append("=" * 72)
 lines.append(
-    "RAPPORT CLINIQUE — " + MODEL_MANIFEST["bundle_id"]
+    "MODEL EVALUATION REPORT - " + MODEL_MANIFEST["bundle_id"]
     + " (handcraft + 2 × V2S+CBAM)"
 )
 lines.append("=" * 72)
 lines.append(
-    "ATTENTION : seuils Youden calculés sur les mêmes prédictions OOF ; "
-    "résultats descriptifs, pas une calibration prospective."
+    "Youden thresholds are selected using the same out-of-fold predictions; "
+    "results are descriptive, not a prospective calibration."
+)
+lines.append(
+    "The scaler and classifier are fitted within each fold. CNN features are "
+    "precomputed; this is not an end-to-end held-out evaluation."
 )
 lines.append("")
-lines.append(f"Effectif total : {len(y)}")
+lines.append(f"Total observations : {len(y)}")
 for c in (0, 1, 2):
-    lines.append(f"  classe {c} = {LABELS[c]:<10} n = {(y == c).sum()}")
+    lines.append(f"  Class {c} = {LABELS[c]:<10} n = {(y == c).sum()}")
 lines.append("")
-lines.append("--- Performances en sortie argmax (softmax classique) ---")
+lines.append("--- Argmax classification metrics ---")
 lines.append(f"  Accuracy : {(y_pred == y).mean():.4f}")
 for c in (0, 1, 2):
     p = precision_score(y, y_pred, labels=[c], average="micro")
@@ -251,37 +259,35 @@ for c in (0, 1, 2):
     f = f1_score(y, y_pred, labels=[c], average="micro")
     lines.append(f"  {LABELS[c]:<10}  precision={p:.3f}  recall(sens)={r:.3f}  f1={f:.3f}")
 lines.append("")
-lines.append("--- Seuils par probabilité multiclasse utilisée comme score one-vs-rest ---")
-lines.append("  Méthode : Youden index = sensibilité + spécificité - 1")
+lines.append("--- Thresholds on multiclass probabilities used as one-vs-rest scores ---")
+lines.append("  Method: Youden index = sensitivity + specificity - 1")
 lines.append("")
 for c in (0, 1, 2):
     t, sens, spec = optimal_thresholds[c]
-    lines.append(f"  {LABELS[c]:<10}  T* = {t:.3f}   Sensibilité = {sens:.3f}   Spécificité = {spec:.3f}")
+    lines.append(f"  {LABELS[c]:<10}  T* = {t:.3f}   Sensitivity = {sens:.3f}   Specificity = {spec:.3f}")
 lines.append("")
-lines.append("--- Lecture clinique mélanome ---")
+lines.append("--- Melanoma operating point ---")
 t_mel, sens_mel, spec_mel = optimal_thresholds[1]
-lines.append(f"  Au seuil T*({LABELS[1]}) = {t_mel:.3f} : ")
-lines.append(f"    - Sensibilité = {sens_mel:.3f}  -> on détecte {sens_mel*100:.1f} % des vrais mélanomes")
-lines.append(f"    - Spécificité = {spec_mel:.3f}  -> {(1-spec_mel)*100:.1f} % de faux positifs")
+lines.append(f"  At threshold T*({LABELS[1]}) = {t_mel:.3f} : ")
+lines.append(f"    - Sensitivity = {sens_mel:.3f}  -> detected {sens_mel*100:.1f} % of true melanomas")
+lines.append(f"    - Specificity = {spec_mel:.3f}  -> {(1-spec_mel)*100:.1f} % false positives")
 lines.append("")
-lines.append("  Cliniquement, si on veut une sensibilité plus élevée (rater moins de mélanomes) :")
-lines.append("  -> abaisser T (ex T = 0.20) -> Sens ~ 0.95, Spec ~ 0.85")
-lines.append("  Si on veut moins de biopsies inutiles :")
-lines.append("  -> remonter T (ex T = 0.50) -> Sens ~ 0.75, Spec ~ 0.95")
+lines.append("  Lower thresholds trade specificity for sensitivity; higher thresholds do the reverse.")
+lines.append("  Quantify this trade-off from the evaluated predictions before choosing an operating point.")
 lines.append("")
 lines.append("--- Calibration ---")
-lines.append("  Voir reliability diagram. Si la courbe est en-dessous de la diagonale :")
-lines.append("  le modèle est surconfiant. Si au-dessus, sous-confiant.")
-lines.append("  Une calibration par temperature scaling améliorerait le réglage clinique.")
+lines.append("  In a reliability diagram, a curve below the diagonal indicates overconfidence;")
+lines.append("  a curve above the diagonal indicates underconfidence.")
+lines.append("  Recalibration methods require a separate evaluation; improvement is not guaranteed.")
 lines.append("")
-lines.append("--- Files générés dans clinical_report/ ---")
+lines.append("--- Generated files in the local clinical report directory ---")
 lines.append("  - calibration.png             (3 reliability diagrams)")
-lines.append("  - roc_per_class.png           (3 ROC + seuils Youden)")
-lines.append("  - proba_histograms.png        (distribution P par classe)")
-lines.append("  - confusion_argmax.png        (confusion normalisée)")
+lines.append("  - roc_per_class.png           (3 ROC + Youden thresholds)")
+lines.append("  - proba_histograms.png        (Probability distribution by class)")
+lines.append("  - confusion_argmax.png        (Normalized confusion)")
 lines.append("  - decision_curve_melanoma.png (decision curve analysis)")
-lines.append("  - entropy_confidence.png      (confiance du modèle)")
-lines.append("  - summary.txt                 (ce fichier)")
+lines.append("  - entropy_confidence.png      (Prediction entropy)")
+lines.append("  - summary.txt                 (This file)")
 
 summary = "\n".join(lines)
 (OUT / "summary.txt").write_text(summary, encoding="utf-8")

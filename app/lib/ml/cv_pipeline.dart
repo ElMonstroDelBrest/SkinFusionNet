@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:opencv_core/opencv.dart' as cv;
 
-/// OpenCV-backed pieces of the SERIOUS pipeline, ported 1:1 from the Python
+/// OpenCV preprocessing for the deployed pipeline, based on the Python
 /// reference (infer_unet.py, dehair.py, features.py).
 ///
 /// Working resolution: the cropped square is resized to [work]x[work] so the
@@ -29,7 +29,10 @@ class CvPipeline {
   /// U-Net input tensor: RGB, resized 384, /255, layout NCHW.
   static Float32List unetInput(cv.Mat bgr) {
     final rgb = cv.cvtColor(bgr, cv.COLOR_BGR2RGB);
-    final r = cv.resize(rgb, (unetSize, unetSize), interpolation: cv.INTER_LINEAR);
+    final r = cv.resize(rgb, (
+      unetSize,
+      unetSize,
+    ), interpolation: cv.INTER_LINEAR);
     final d = r.data; // RGB interleaved, 384*384*3
     final plane = unetSize * unetSize;
     final out = Float32List(3 * plane);
@@ -90,7 +93,10 @@ class CvPipeline {
   /// CNN input tensor: RGB, 224, ImageNet-normalised, NCHW.
   static Float32List cnnInput(cv.Mat bgr) {
     final rgb = cv.cvtColor(bgr, cv.COLOR_BGR2RGB);
-    final r = cv.resize(rgb, (cnnSize, cnnSize), interpolation: cv.INTER_LINEAR);
+    final r = cv.resize(rgb, (
+      cnnSize,
+      cnnSize,
+    ), interpolation: cv.INTER_LINEAR);
     final out = _normChw(r);
     rgb.dispose();
     r.dispose();
@@ -102,7 +108,10 @@ class CvPipeline {
   /// this full group reproduces extract_tta.py (set-equal -> same mean).
   static List<Float32List> cnnInputsTTA(cv.Mat bgr) {
     final rgb = cv.cvtColor(bgr, cv.COLOR_BGR2RGB);
-    final base = cv.resize(rgb, (cnnSize, cnnSize), interpolation: cv.INTER_LINEAR);
+    final base = cv.resize(rgb, (
+      cnnSize,
+      cnnSize,
+    ), interpolation: cv.INTER_LINEAR);
     rgb.dispose();
     final flipped = cv.flip(base, 1); // horizontal flip
     final mats = <cv.Mat>[
@@ -168,7 +177,10 @@ class CvPipeline {
 
   static (double, double) _borderDiameter(cv.Mat mask) {
     final (contours, _) = cv.findContours(
-        mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE);
+      mask,
+      cv.RETR_EXTERNAL,
+      cv.CHAIN_APPROX_NONE,
+    );
     if (contours.isEmpty) return (0.0, 0.0);
     var bestIdx = 0;
     var bestArea = -1.0;
@@ -203,7 +215,11 @@ class CvPipeline {
   }
 
   static (double, double, double, double) _labFeatures(
-      cv.Mat bgr, Uint8List mask, int rows, int cols) {
+    cv.Mat bgr,
+    Uint8List mask,
+    int rows,
+    int cols,
+  ) {
     final lab = cv.cvtColor(bgr, cv.COLOR_BGR2Lab);
     final d = lab.data; // Lab interleaved 8-bit
     final aVals = <double>[];
@@ -227,7 +243,10 @@ class CvPipeline {
     final externals = <double>[];
     final boundary = <double>[];
     for (final r in morphoRadii) {
-      final k = cv.getStructuringElement(cv.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1));
+      final k = cv.getStructuringElement(cv.MORPH_ELLIPSE, (
+        2 * r + 1,
+        2 * r + 1,
+      ));
       final eroded = cv.erode(mask, k);
       final dilated = cv.dilate(mask, k);
       final inner = cv.subtract(mask, eroded);

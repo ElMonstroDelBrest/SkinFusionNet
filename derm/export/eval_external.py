@@ -19,7 +19,7 @@ model still emits 3 probabilities summing to one. We evaluate the melanoma and
 nevus class probabilities as one-vs-rest scores, report the atypical flag rate,
 and provide the 3-class argmax confusion.
 
-Usage:  .venv_extval/bin/python export/eval_external.py
+Run from the repository root: python3 -m derm.export.eval_external
 """
 import csv
 import math

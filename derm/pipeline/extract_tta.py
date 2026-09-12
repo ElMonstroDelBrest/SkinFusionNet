@@ -7,7 +7,7 @@ Outputs (depending on the input dir) :
   cnn_v2s_tta_features.csv          (from Skin_Cancer_Merged_lesion)
   cnn_v2s_dehair_tta_features.csv   (from Skin_Cancer_Merged_dehair)
 
-Usage : python extract_tta.py {lesion|dehair}
+Usage : python3 -m derm.pipeline.extract_tta {lesion|dehair}
 """
 import csv
 import sys
@@ -27,7 +27,7 @@ from derm import paths
 
 def parse_target():
     if len(sys.argv) < 2:
-        print("usage: python extract_tta.py {lesion|dehair}")
+        print("usage: python3 -m derm.pipeline.extract_tta {lesion|dehair}")
         sys.exit(1)
     t = sys.argv[1]
     if t == "lesion":

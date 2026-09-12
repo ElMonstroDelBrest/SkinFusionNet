@@ -23,7 +23,10 @@ void main() {
 }
 
 class SkinApp extends StatelessWidget {
-  const SkinApp({super.key});
+  final AuditRepository? repository;
+  final ClassifierService? classifier;
+
+  const SkinApp({super.key, this.repository, this.classifier});
 
   @override
   Widget build(BuildContext context) {
@@ -38,21 +41,24 @@ class SkinApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const ShellScreen(),
+      home: ShellScreen(repository: repository, classifier: classifier),
     );
   }
 }
 
 class ShellScreen extends StatefulWidget {
-  const ShellScreen({super.key});
+  final AuditRepository? repository;
+  final ClassifierService? classifier;
+
+  const ShellScreen({super.key, this.repository, this.classifier});
 
   @override
   State<ShellScreen> createState() => _ShellScreenState();
 }
 
 class _ShellScreenState extends State<ShellScreen> {
-  final _service = ClassifierService();
-  final _repo = SqfliteAuditRepository();
+  late final ClassifierService _service;
+  late final AuditRepository _repo;
   final _picker = ImagePicker();
 
   bool _busy = false;
@@ -61,8 +67,7 @@ class _ShellScreenState extends State<ShellScreen> {
   double _progress = 0;
   String _progressLabel = '';
 
-  int _dest =
-      0; // 0 Patients, 1 Analyses, 2 Review, 3 Dashboard, 4 Settings
+  int _dest = 0; // 0 Patients, 1 Analyses, 2 Review, 3 Dashboard, 4 Settings
   int _refresh = 0; // bumped after an import to reload the visible pane
   Thresholds _thr =
       Thresholds.clinical; // active screening thresholds (editable)
@@ -78,6 +83,8 @@ class _ShellScreenState extends State<ShellScreen> {
   @override
   void initState() {
     super.initState();
+    _service = widget.classifier ?? ClassifierService();
+    _repo = widget.repository ?? SqfliteAuditRepository();
     _initModels();
   }
 

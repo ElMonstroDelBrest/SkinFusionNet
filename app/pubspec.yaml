@@ -5,6 +5,7 @@ version: 0.2.0+2
 
 environment:
   sdk: ^3.12.1
+  flutter: ">=3.44.1"
 
 dependencies:
   flutter:
@@ -36,6 +37,7 @@ flutter:
     - assets/models/lgbm_a.onnx
     - assets/models/lgbm_c.onnx
     - assets/models/model_manifest.json
+    - assets/fonts/Inter-LICENSE.txt
   fonts:
     - family: Inter
       fonts:

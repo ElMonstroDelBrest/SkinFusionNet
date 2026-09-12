@@ -5,7 +5,7 @@ Mirrors the model construction of infer_unet.py:48-50.
 Input  : 1x3x384x384  float32 (RGB, /255 done on the app side)
 Output : 1x1x384x384  raw logits  (apply sigmoid + >0.5 threshold downstream)
 
-Run from C:\\Projet\\Stage :  python export/export_unet_onnx.py
+Run from the repository root: python3 -m derm.export.export_unet_onnx
 """
 from pathlib import Path
 

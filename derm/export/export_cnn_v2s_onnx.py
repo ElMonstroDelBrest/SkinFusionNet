@@ -6,7 +6,7 @@ needed (the pipeline builds the feature vector with dynamic length 18+1280):
   export/cnn_lesion_feats.onnx  <- cnn_v2s_best.pth
   export/cnn_dehair_feats.onnx  <- cnn_v2s_dehair_best.pth
 
-Run from C:\\Projet\\Stage :  C:\\v\\Scripts\\python.exe export\\export_cnn_v2s_onnx.py
+Run from the repository root: python3 -m derm.export.export_cnn_v2s_onnx
 """
 import sys
 from pathlib import Path

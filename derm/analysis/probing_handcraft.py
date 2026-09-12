@@ -60,7 +60,7 @@ def main():
         h = feats[col].values.astype('float64')
         mask = np.isfinite(h)
         if mask.sum() < len(h):
-            print(f"  {col}: {len(h)-mask.sum()} valeurs non-finies -> ignorées")
+            print(f"  {col}: {len(h)-mask.sum()} non-finite values skipped")
         Zc, hc = Z[mask], h[mask]
 
         lin = make_pipeline(StandardScaler(), Ridge(alpha=10.0))
@@ -83,17 +83,17 @@ def main():
 
     def verdict(r):
         if r.r2_nonlinear >= 0.5:
-            return "ENCODÉ par le CNN (redondant par encodage)"
+            return "Predictable from CNN features with the tested regressor"
         if r.r2_nonlinear >= 0.2:
-            return "partiellement encodé"
+            return "Partially predictable from CNN features"
         # Compare descriptors poorly predicted by the probing models.
         if r.auc_mel >= 0.60:
-            return "NON encodé + discriminant -> info UNIQUE potentielle"
-        return "NON encodé + peu discriminant -> bruit/non pertinent"
+            return "Low probing R2 and univariate discrimination; test complementary value"
+        return "Low probing R2 and weak univariate discrimination"
     df['verdict'] = df.apply(verdict, axis=1)
 
     print("\n" + "=" * 78)
-    print("PROBING R²(handcraft | embedding 512-d)  — trié par R² non-linéaire")
+    print("PROBING R2(handcrafted | V2S lesion + dehair embeddings), sorted by nonlinear R2")
     print("=" * 78)
     with pd.option_context('display.width', 200, 'display.max_colwidth', 60):
         print(df[['feature', 'rank', 'auc_mel', 'r2_linear',

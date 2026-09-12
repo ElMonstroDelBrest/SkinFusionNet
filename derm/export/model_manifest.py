@@ -10,6 +10,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import math
 import re
 from pathlib import Path
 from typing import Any
@@ -54,6 +55,7 @@ def load_manifest(path: Path) -> dict[str, Any]:
         "bundle_id",
         "bundle_sha256",
         "variant",
+        "classes",
         "preprocessing",
         "decision_policy",
         "components",
@@ -61,10 +63,38 @@ def load_manifest(path: Path) -> dict[str, Any]:
     missing = sorted(required.difference(raw))
     if missing:
         raise ValueError(f"manifest is missing required fields: {missing}")
-    if raw["schema_version"] != 1:
+    if type(raw["schema_version"]) is not int or raw["schema_version"] != 1:
         raise ValueError(f"unsupported manifest schema: {raw['schema_version']}")
     if raw["variant"] != "single_pass":
         raise ValueError(f"unsupported deployed variant: {raw['variant']}")
+    if raw["classes"] != ["nevus", "melanoma", "atypical"]:
+        raise ValueError("unexpected deployed class order")
+    for key in ("bundle_id", "release_date", "status"):
+        if not isinstance(raw.get(key), str) or not raw[key].strip():
+            raise ValueError(f"missing manifest string: {key}")
+    for key in ("preprocessing", "decision_policy"):
+        value = raw[key]
+        if (
+            not isinstance(value, dict)
+            or not isinstance(value.get("version"), str)
+            or not value["version"].strip()
+        ):
+            raise ValueError(f"missing {key} version")
+    policy = raw["decision_policy"]
+    if not isinstance(policy.get("status"), str) or not policy["status"].strip():
+        raise ValueError("missing decision policy status")
+    thresholds = policy.get("thresholds")
+    if not isinstance(thresholds, dict):
+        raise ValueError("missing decision thresholds")
+    for name in raw["classes"]:
+        value = thresholds.get(name)
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(value)
+            or not 0 <= value <= 1
+        ):
+            raise ValueError(f"invalid {name} threshold")
     return raw
 
 
@@ -92,12 +122,12 @@ def validate_manifest(manifest_path: Path, asset_dir: Path) -> dict[str, Any]:
     manifest = load_manifest(manifest_path)
     if not SHA256_PATTERN.fullmatch(str(manifest.get("bundle_sha256", ""))):
         raise ValueError("manifest bundle_sha256 is not a lowercase SHA-256")
+    hashes, bundle_hash = computed_identity(asset_dir, manifest)
     for component in manifest["components"]:
         if not SHA256_PATTERN.fullmatch(str(component.get("sha256", ""))):
             raise ValueError(
                 f"invalid component SHA-256 for {component.get('name')}"
             )
-    hashes, bundle_hash = computed_identity(asset_dir, manifest)
     declared = {
         component["name"]: component["sha256"] for component in manifest["components"]
     }
